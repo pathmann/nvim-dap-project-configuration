@@ -257,7 +257,7 @@ M.setup = function(opts)
 
   local projcfg = loadProjectConfiguration(vim.fn.getcwd())
   if projcfg ~= nil and vim.tbl_count(projcfg) == 1 then
-    M.current_selection = vim.tbl_keys(projcfg)[0]
+    M.current_selection = vim.tbl_keys(projcfg)[1]
   else
     M.current_selection = loadSelection(vim.fn.getcwd())
   end
