@@ -4,6 +4,7 @@ local popup = require("plenary.popup")
 
 local M = {}
 M.current_selection = nil
+M.run_dap = true
 
 local Selection_winid = nil
 
@@ -37,6 +38,7 @@ local function loadState(cwd)
     end
 
     M.current_selection = json["current_selection"]
+    M.run_dap = json["run_dap"]
   end
 end
 
@@ -52,6 +54,7 @@ local function saveState(cwd)
 
   local state = {}
   state["current_selection"] = M.current_selection
+  state["run_dap"] = M.run_dap
 
   file:write(vim.fn.json_encode(state))
   file:close()
