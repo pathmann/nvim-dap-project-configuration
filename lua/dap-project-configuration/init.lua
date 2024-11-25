@@ -1,10 +1,12 @@
 local Config = require("dap-project-configuration.config")
 local launcher = require("dap-project-configuration.launcher")
-local M = {}
-
 local popup = require("plenary.popup")
 
+local M = {}
+M.current_selection = nil
+
 local Selection_winid = nil
+
 
 --- Returns the savename for a given directory
 --- @param dir string: the path to get a savename for
