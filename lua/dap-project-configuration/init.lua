@@ -14,33 +14,45 @@ local function getSaveName(dir)
   return Config.options.dir .. fname
 end
 
---- Loads the saved selection for the current from the configured dir
+--- Load the state for the cwd from the configured dir
 --- @param cwd string: the current cwd
---- @return string|nil
-local function loadSelection(cwd)
+local function loadState(cwd)
+  M.current_selection = nil
+
   local savename = getSaveName(cwd)
   if vim.fn.filereadable(savename) ~= 0 then
-    for l in io.lines(savename) do
-      if l ~= nil then
-        return l
-      end
+    local file = io.open(savename, "r")
+    if not file then
+      return
     end
-  end
 
-  return nil
+    local content = file:read("*a")
+    file:close()
+
+    local ok, json = pcall(vim.fn.json_decode, content)
+    if not ok or not json then
+      return
+    end
+
+    M.current_selection = json["current_selection"]
+  end
 end
 
---- Saves the current selection for the cwd in the configured dir
+--- Saves the state for the cwd to the configured dir
 --- @param cwd string: the current cwd
---- @param selname string: the selections name
-local function saveSelection(cwd, selname)
+local function saveState(cwd)
   local savename = getSaveName(cwd)
-  local f = io.open(savename, "w")
-  if f ~= nil then
-    f:write(selname)
-    f:flush()
-    f:close()
+  local file = io.open(savename, "w")
+  if not file then
+    print("nvim-dap-project-configuration: error writing statefile")
+    return
   end
+
+  local state = {}
+  state["current_selection"] = M.current_selection
+
+  file:write(vim.fn.json_encode(state))
+  file:close()
 end
 
 --- Returns the default prelaunch config
@@ -117,7 +129,7 @@ M.select_configuration = function()
 
     local cb = function(_, sel)
       M.current_selection = sel
-      saveSelection(vim.fn.getcwd(), M.current_selection)
+      saveState(vim.fn.getcwd())
     end
 
     Selection_winid = popup.create(keys, {
@@ -255,11 +267,11 @@ end
 M.setup = function(opts)
   Config.setup(opts)
 
+  loadState(vim.fn.getcwd())
+
   local projcfg = loadProjectConfiguration(vim.fn.getcwd())
   if projcfg ~= nil and vim.tbl_count(projcfg) == 1 then
     M.current_selection = vim.tbl_keys(projcfg)[1]
-  else
-    M.current_selection = loadSelection(vim.fn.getcwd())
   end
 
   vim.api.nvim_create_user_command("ProjectDapSelect", M.select_configuration, {})
