@@ -119,12 +119,23 @@ end
 
 --- Shows a popup to choose the selection of the current cwds project config
 --- sets M.current_selection
-M.select_configuration = function()
+M.select_configuration = function(args)
   local cfg = loadProjectConfiguration(vim.fn.getcwd())
   if cfg ~= nil then
     local keys = {}
     for k, _ in pairs(cfg) do
       table.insert(keys, k)
+    end
+
+    if not vim.tbl_isempty(args.fargs) then
+      if vim.tbl_contains(keys, args.fargs[1]) then
+        M.current_selection = args.fargs[1]
+        saveState(vim.fn.getcwd())
+      else
+        print("no such configuration found")
+      end
+
+      return
     end
 
     table.sort(keys)
@@ -349,6 +360,27 @@ M.select_dap = function()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "q", "<cmd>ProjectDapCloseSelection<CR>", { silent =  false })
 end
 
+local function listSelections()
+  local cfg = loadProjectConfiguration(vim.fn.getcwd())
+  if cfg == nil then
+    return {}
+  end
+
+  return vim.tbl_keys(cfg)
+end
+
+local function filterPrefix(tbl, pref)
+  local filtered = vim.tbl_filter(function(it)
+    return vim.startswith(it, pref)
+  end, tbl)
+  return filtered
+end
+
+local function completeSelections(argprefix)
+  local allsels = listSelections()
+  return filterPrefix(allsels, argprefix)
+end
+
 M.setup = function(opts)
   Config.setup(opts)
 
@@ -359,7 +391,7 @@ M.setup = function(opts)
     M.current_selection = vim.tbl_keys(projcfg)[1]
   end
 
-  vim.api.nvim_create_user_command("ProjectDapSelect", M.select_configuration, {})
+  vim.api.nvim_create_user_command("ProjectDapSelect", M.select_configuration, { nargs="?", complete=completeSelections })
   vim.api.nvim_create_user_command("ProjectDapRun", M.run_selected, {})
   vim.api.nvim_create_user_command("ProjectDapCloseSelection", M.close_selection, {})
   vim.api.nvim_create_user_command("ProjectDapStopAllTasks", M.stop_all_tasks, {})

@@ -281,7 +281,7 @@ Prelaunch tasks are executed sorted by their key.
 
 ## Usage
 These user commands are available:
-- `ProjectDapSelect`: Open the selection popup
+- `ProjectDapSelect`: Select the given (by argument) subproject. If none is given, open the selection popup
 - `ProjectDapRun`: Run the selected config
 - `ProjectDapCloseSelection`: Close the selection popup (although there is a buffer keymap "q" to close the popup)
 - `ProjectDapStopAllTasks`: Stop all prelaunch tasks started by the plugin
