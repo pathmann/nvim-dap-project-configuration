@@ -183,8 +183,13 @@ M.launch = function(selection, cmdname, cmdtable, callafter)
     printfunc = cmdtable.output.target
   end
 
+  local cmd = cmdtable.cmd
+  if type(cmd) == "function" then
+    cmd = cmd()
+  end
+
   local j = job:new({
-    command = cmdtable.cmd,
+    command = cmd,
     args = cmdtable.args,
     cwd = cmdtable.cwd,
     env = cmdtable.env,
