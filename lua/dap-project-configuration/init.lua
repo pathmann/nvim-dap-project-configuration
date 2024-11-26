@@ -321,6 +321,34 @@ M.disable_dap = function()
   M.run_dap = false
 end
 
+M.select_dap = function()
+  M.close_selection()
+
+  local width = 50
+  local height = 30
+  local borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
+
+  local cb = function(_, sel)
+    M.run_dap = sel == "DAP"
+    saveState(vim.fn.getcwd())
+    Selection_winid = nil
+  end
+
+  Selection_winid = popup.create({"DAP", "Run"}, {
+    title = "Select DAP or Run",
+    highlight = "NvimDapProjectDAPSelection",
+    line = math.floor(((vim.o.lines - height) / 2) - 1),
+    col = math.floor((vim.o.columns - width) / 2),
+    minwidth = width,
+    minheight = height,
+    borderchars = borderchars,
+    callback = cb,
+  })
+
+  local bufnr = vim.api.nvim_win_get_buf(Selection_winid)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "q", "<cmd>ProjectDapCloseSelection<CR>", { silent =  false })
+end
+
 M.setup = function(opts)
   Config.setup(opts)
 
@@ -338,6 +366,7 @@ M.setup = function(opts)
   vim.api.nvim_create_user_command("ProjectDapToggleDap", M.toggle_dap_run, {})
   vim.api.nvim_create_user_command("ProjectDapEnableDap", M.enable_dap, {})
   vim.api.nvim_create_user_command("ProjectDapDisableDap", M.disable_dap, {})
+  vim.api.nvim_create_user_command("ProjectDapSelectDap", M.select_dap, {})
 
 
   vim.api.nvim_create_autocmd({"BufWipeout"}, {
