@@ -136,6 +136,7 @@ M.select_configuration = function()
     local cb = function(_, sel)
       M.current_selection = sel
       saveState(vim.fn.getcwd())
+      Selection_winid = nil
     end
 
     Selection_winid = popup.create(keys, {
