@@ -113,6 +113,7 @@ end
 M.close_selection = function()
   if Selection_winid ~= nil then
     vim.api.nvim_win_close(Selection_winid, true)
+    Selection_winid = nil
   end
 end
 
