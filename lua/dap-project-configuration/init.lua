@@ -202,22 +202,60 @@ local function launchAll(selection, lcfg, cbafter)
   callnext(0, 0)
 end
 
+--- Extracts all parameters from a dap configuration provider and returns it as launch table for launcher.launch
+--- @param dapcfg table: the config provider
+--- @returns: table
+local function dapConfigToLaunchConfig(dapcfg)
+  local ret = {}
+
+  ret.cwd = dapcfg.cwd
+  ret.cmd = dapcfg.program
+  ret.args = dapcfg.args
+  ret.env = dapcfg.env
+
+  return ret
+end
+
 --- Runs the subconfig given by the key and the config table
 --- @param selection string: the selection name
 --- @param cfg table: the config table of the selection
-local function applyRunConfig(selection, cfg)
-  local call_dap = function()
-    if cfg.dap == nil then
-      return
-    end
+--- @param rundap boolean: if true, run dapcmd, else execute launch config
+local function applyRunConfig(selection, cfg, rundap)
+  local call_after = function()
+    if rundap then
+      if cfg.dap == nil then
+        return
+      end
 
-    local rundap = Config.options.dapcmd
-    if type(rundap) == "string" then
-      vim.cmd(rundap)
-    elseif type(rundap) == "function" then
-      rundap()
-    else
-      print("invalid rundap in selection " .. selection)
+      local dapcmd = Config.options.dapcmd
+      if type(dapcmd) == "string" then
+        vim.cmd(dapcmd)
+      elseif type(dapcmd) == "function" then
+        dapcmd()
+      else
+        print("invalid rundap in selection " .. selection)
+      end
+    else --- launch app
+      if cfg.run == nil then
+        return
+      end
+
+      local runcfg = cfg.run.launch
+
+      local cmdtable = defaultPrelaunchConfig(vim.fn.getcwd())
+      cmdtable.wait = false
+
+      if type(runcfg) == "string" then
+        cmdtable = vim.tbl_deep_extend("force", cmdtable, dapConfigToLaunchConfig(cfg.dap[runcfg]))
+      elseif type(runcfg) == "table" then
+        cmdtable = vim.tbl_deep_extend("force", cmdtable, runcfg)
+      else
+        return
+      end
+
+      cmdtable.output = vim.tbl_deep_extend("force", cmdtable.output, cfg.run.output or {})
+
+      launcher.launch(selection, "launch", cmdtable, nil)
     end
   end
 
@@ -237,9 +275,9 @@ local function applyRunConfig(selection, cfg)
 
   local prelaunch = cfg["prelaunch"]
   if prelaunch ~= nil then
-    launchAll(selection, prelaunch, call_dap)
+    launchAll(selection, prelaunch, call_after)
   else
-    call_dap()
+    call_after()
   end
 end
 
@@ -258,7 +296,7 @@ M.run_selected = function()
       return
     end
 
-    applyRunConfig(M.current_selection, cfg[M.current_selection])
+    applyRunConfig(M.current_selection, cfg[M.current_selection], M.run_dap)
   else
     print("no project configuration found in cwd")
   end
@@ -267,6 +305,18 @@ end
 --- Stops all started prelaunch tasks
 M.stop_all_tasks = function()
   launcher.stop_all_tasks()
+end
+
+M.toggle_dap_run = function()
+  M.run_dap = not M.run_dap
+end
+
+M.enable_dap = function()
+  M.run_dap = true
+end
+
+M.disable_dap = function()
+  M.run_dap = false
 end
 
 M.setup = function(opts)
@@ -283,6 +333,10 @@ M.setup = function(opts)
   vim.api.nvim_create_user_command("ProjectDapRun", M.run_selected, {})
   vim.api.nvim_create_user_command("ProjectDapCloseSelection", M.close_selection, {})
   vim.api.nvim_create_user_command("ProjectDapStopAllTasks", M.stop_all_tasks, {})
+  vim.api.nvim_create_user_command("ProjectDapToggleDap", M.toggle_dap_run, {})
+  vim.api.nvim_create_user_command("ProjectDapEnableDap", M.enable_dap, {})
+  vim.api.nvim_create_user_command("ProjectDapDisableDap", M.disable_dap, {})
+
 
   vim.api.nvim_create_autocmd({"BufWipeout"}, {
     callback = launcher.on_buffer_closed
