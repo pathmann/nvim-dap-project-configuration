@@ -3,6 +3,8 @@
 
 You can use multiple subprojects and select your current (see [Usage](#Usage)).
 
+Optionally you can run your app instead of debugging it with nvim-dap.
+
 ## Installation
 Install the plugin with your preferred package manager:
 
@@ -46,16 +48,34 @@ return {
             }
         },
         dap = { -- this is set as nvim-dap config provider "nvim-dap-project-configuration"
-            {
+            config1 = {
                 -- nvim-dap conifguration1
             },
-            {
+            config2 = {
                 -- nvim-dap configuration_n
             },
-        }
+        },
+        run = {
+            launch = "config1", -- will extract run config from dap config "config1", for custom options or if adapter configuration is not compatible, see mysubproj2.run
+            output = {
+                -- see prelaunch output options
+            }
+        },
     },
     mysubproj2 = {
         -- ...
+        run = {
+            launch = {
+                cmd = "myexec",
+                args = {"progparam1"},
+                env = {
+
+                },
+            },
+            output = {
+                -- ...
+            }
+        }
     }
 }
 ```
@@ -265,6 +285,10 @@ These user commands are available:
 - `ProjectDapRun`: Run the selected config
 - `ProjectDapCloseSelection`: Close the selection popup (although there is a buffer keymap "q" to close the popup)
 - `ProjectDapStopAllTasks`: Stop all prelaunch tasks started by the plugin
+- `ProjectDapToggleDap`: Toggles between debugging and running
+- `ProjectDapEnableDap`: Enables debugging (disables running)
+- `ProjectDapDisableDap`: Disables debugging (enables running)
+- `ProjectDapSelectDap`: Open the dap or run popup
 
 ## Intention
 I was previously working with Qt Creator where you can select the subdir project to run/debug (with configured arguments, etc.). So this plugin was born to adapt this functionality without the need to leave Neovim and/or use a terminal inside Neovim and write bash scripts for all tasks.
