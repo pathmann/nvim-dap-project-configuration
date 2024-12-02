@@ -322,14 +322,17 @@ end
 
 M.toggle_dap_run = function()
   M.run_dap = not M.run_dap
+  saveState(vim.fn.getcwd())
 end
 
 M.enable_dap = function()
   M.run_dap = true
+  saveState(vim.fn.getcwd())
 end
 
 M.disable_dap = function()
   M.run_dap = false
+  saveState(vim.fn.getcwd())
 end
 
 M.select_dap = function()
