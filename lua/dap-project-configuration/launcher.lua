@@ -160,6 +160,14 @@ M.launch = function(selection, cmdname, cmdtable, callafter)
         vim.api.nvim_buf_del_var(buf, "nvim-dap-project-configuration.pid")
         killPid(pid)
         bufprint("*** nvim-dap-project-configuration: Process killed ***")
+
+        if cmdtable.output.clear then
+          vim.schedule(function()
+            vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
+            vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
+          end)
+        end
       end
     end
   end

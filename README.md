@@ -268,6 +268,7 @@ These are the default prelaunch options:
     output = {
         target = "buffer", -- pass all stdout and stderr to a buffer, use "print" to use neovim print function or pass a function(errorstr, datastr) which is invoked
         reuse = true, -- if target == "buffer", reuse the previously opened buffer when rerunning
+        clear = false, -- if target == "buffer" and reuse == true, clear the buffer first
         close_on_success = false, -- if target == "buffer", close the buffer if the prelaunch was successfull
         stop_on_close = true, -- if target == "buffer", kill the process if the buffer is closed manually
         autoscroll = false, -- if target == "buffer", automatically scroll to end when appending data

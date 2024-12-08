@@ -72,6 +72,7 @@ local function defaultPrelaunchConfig(cwd)
     output = {
       target = "buffer",
       reuse = true,
+      clear = false,
       close_on_success = false,
       stop_on_close = true,
       autoscroll = false,
