@@ -201,9 +201,9 @@ local function launchAll(selection, lcfg, cbafter)
     local key, _ = iter()
     if key ~= nil then
       if lcfg[key].wait == true then
-        launcher.launch(selection, key, lcfg[key], callnext)
+        launcher.launch(selection, key, lcfg[key], callnext, Config.options.ignore_win_to_close)
       else
-        launcher.launch(selection, key, lcfg[key], nil)
+        launcher.launch(selection, key, lcfg[key], nil, Config.options.ignore_win_to_close)
         callnext(0, 0)
       end
     else
@@ -269,7 +269,7 @@ local function applyRunConfig(selection, cfg, rundap)
 
       cmdtable.output = vim.tbl_deep_extend("force", cmdtable.output, cfg.run.output or {})
 
-      launcher.launch(selection, "launch", cmdtable, nil)
+      launcher.launch(selection, "launch", cmdtable, nil, Config.options.ignore_win_to_close)
     end
   end
 

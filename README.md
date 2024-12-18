@@ -34,6 +34,26 @@ local defaults = {
   dir = vim.fn.stdpath("state") .. "/dap-project-configuration/", -- path where to store the last selection (depending on the cwd) 
   filename = ".nvim-dap-project-configuration.lua", -- project configuration file to look for in current cwd
   dapcmd = "DapContinue", -- command to run with :ProjectDapRun after the prelaunch tasks are successfully executed (a string is interpreted as vim cmd, a function will be executed)
+  ignore_win_to_close = nil,
+}
+```
+
+In my setup, [beacon.nvim](https://github.com/DanilaMihailov/beacon.nvim) would intercept closing the tab when a command ran successfully and close_on_success is true (because it creates a window on that tab).
+
+So I use this as a workaround:
+
+```lua
+opts = {
+    -- ..
+
+    ignore_win_to_close = function(winid)
+        if vim.wo[wid].winhl == 'Normal:Beacon' then
+          return true
+        end
+
+        return false
+    end,
+  end,
 }
 ```
 

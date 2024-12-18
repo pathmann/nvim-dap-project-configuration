@@ -111,7 +111,7 @@ local function createBuffer(selection, cmdname, ft)
   return buf, win
 end
 
-M.launch = function(selection, cmdname, cmdtable, callafter)
+M.launch = function(selection, cmdname, cmdtable, callafter, ignorewinfunc)
   local buf = nil
   local win = 0
 
@@ -217,11 +217,21 @@ M.launch = function(selection, cmdname, cmdtable, callafter)
                 local win_id = vim.fn.bufwinid(buf)
 
                 if win_id ~= -1 then
+                  -- there might be windows opened on this tab
+                  -- if so, check if we can ignore them
+
                   local tab_id = vim.api.nvim_win_get_tabpage(win_id)
-                  if #vim.api.nvim_tabpage_list_wins(tab_id) == 1 then
-                    vim.api.nvim_set_current_tabpage(tab_id)
-                    vim.cmd('tabclose')
+                  local all_wins = vim.api.nvim_tabpage_list_wins(tab_id)
+                  for _, wid in ipairs(all_wins) do
+                    if wid ~= win_id then
+                      if ignorewinfunc == nil or not ignorewinfunc(wid) then
+                        return
+                      end
+                    end
                   end
+
+                  vim.api.nvim_set_current_tabpage(tab_id)
+                  vim.cmd('tabclose')
                 end
               end
             end)
