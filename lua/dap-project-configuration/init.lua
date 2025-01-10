@@ -83,20 +83,20 @@ end
 
 --- Loads the configured filename from the given directory
 --- @param cwd string: directory to look in
---- @return table|nil
+--- @return table|nil, table|nil
 local function loadProjectConfiguration(cwd)
   local cfgname = cwd .. "/" .. Config.options.filename
   if vim.fn.filereadable(cfgname) == 0 then
-    return nil
+    return nil, nil
   end
 
   local lf = loadfile(cfgname)
   if type(lf) ~= "function" then
     print("invalid project configuration in " .. cfgname .. " (not a function returned)")
-    return nil
+    return nil, nil
   end
 
-  local cfg = lf()
+  local cfg, cbs = lf()
 
   local defprelaunch = defaultPrelaunchConfig(cwd)
   for selkey, _ in pairs(cfg) do
@@ -107,7 +107,7 @@ local function loadProjectConfiguration(cwd)
     end
   end
 
-  return cfg
+  return cfg, cbs
 end
 
 --- Closes the selection popup previously opened with ProjectDapSelect
@@ -121,7 +121,7 @@ end
 --- Shows a popup to choose the selection of the current cwds project config
 --- sets M.current_selection
 M.select_configuration = function(args)
-  local cfg = loadProjectConfiguration(vim.fn.getcwd())
+  local cfg, usercbs = loadProjectConfiguration(vim.fn.getcwd())
   if cfg ~= nil then
     local keys = {}
     for k, _ in pairs(cfg) do
@@ -132,6 +132,15 @@ M.select_configuration = function(args)
       if vim.tbl_contains(keys, args.fargs[1]) then
         M.current_selection = args.fargs[1]
         saveState(vim.fn.getcwd())
+
+        if usercbs ~= nil and usercbs.on_select ~= nil then
+          if type(usercbs.on_select) ~= "function" then
+            print("callback on_select is not a function")
+            return
+          end
+
+          usercbs.on_select(args.fargs[1])
+      end
       else
         print("no such configuration found")
       end
@@ -149,6 +158,15 @@ M.select_configuration = function(args)
       M.current_selection = sel
       saveState(vim.fn.getcwd())
       Selection_winid = nil
+
+      if usercbs ~= nil and usercbs.on_select ~= nil then
+        if type(usercbs.on_select) ~= "function" then
+          print("callback on_select is not a function")
+          return
+        end
+
+        usercbs.on_select(sel)
+      end
     end
 
     Selection_winid = popup.create(keys, {
@@ -390,9 +408,18 @@ M.setup = function(opts)
 
   loadState(vim.fn.getcwd())
 
-  local projcfg = loadProjectConfiguration(vim.fn.getcwd())
+  local projcfg, usercbs = loadProjectConfiguration(vim.fn.getcwd())
   if projcfg ~= nil and vim.tbl_count(projcfg) == 1 then
     M.current_selection = vim.tbl_keys(projcfg)[1]
+  end
+
+  if M.current_selection ~= nil and usercbs ~= nil and usercbs.on_select ~= nil then
+    if type(usercbs.on_select) ~= "function" then
+      print("callback on_select is not a function")
+      return
+    end
+
+    usercbs.on_select(M.current_selection)
   end
 
   vim.api.nvim_create_user_command("ProjectDapSelect", M.select_configuration, { nargs="?", complete=completeSelections })

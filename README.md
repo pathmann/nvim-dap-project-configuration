@@ -101,6 +101,20 @@ return {
 ```
 If there is only one subproject, it is selected by default.
 
+### Callbacks
+Optionally a project configuration can return two tables: the launcher config table (see above) and a table defining callbacks (currently only on_select), which are executed in case of the occurring event.
+
+```lua
+-- vimcwd/.nvim-dap-project-configuration.lua
+return {
+    -- ...
+}, {
+    on_select = function(target)
+        print("you selected another target: " .. target)
+    end,
+}
+```
+
 <details>
 <summary>Example project configuration of a QMake subdir project:</summary>
 
@@ -318,6 +332,5 @@ I'm pretty sure you could achieve the same goal with another plugin for per-proj
 
 ## Improvements
 Although the project goal is complete, there are some possible improvements:
-- callback possibilities (eg. callback which is ran when selection changes to use different compile_commands.json based on the subproject)
 - nested prelaunch tasks to handle some kind of dependency graph but can run some tasks concurrently
 
