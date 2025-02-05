@@ -154,6 +154,8 @@ M.launch = function(selection, cmdname, cmdtable, callafter, ignorewinfunc)
     buf, win = findBuffer(selection, cmdname)
 
     if buf ~= nil then
+      vim.api.nvim_set_current_win(win)
+
       if cmdtable.output.clear then
         vim.schedule(function()
           vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
