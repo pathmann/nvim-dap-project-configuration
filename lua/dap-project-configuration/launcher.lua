@@ -108,6 +108,14 @@ local function createBuffer(selection, cmdname, ft)
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, buf)
 
+  vim.api.nvim_buf_set_keymap(buf, "n", "<C-c>", "", { callback = function()
+    local ok, pid = pcall(vim.api.nvim_buf_get_var, buf, 'nvim-dap-project-configuration.pid')
+    if ok and pid then
+      vim.api.nvim_buf_del_var(buf, "nvim-dap-project-configuration.pid")
+      killPid(pid)
+    end
+  end, silent =  false })
+
   return buf, win
 end
 
