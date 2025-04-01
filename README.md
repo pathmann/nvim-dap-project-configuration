@@ -307,7 +307,7 @@ These are the default prelaunch options:
         stop_on_close = true, -- if target == "buffer", kill the process if the buffer is closed manually
         autoscroll = false, -- if target == "buffer", automatically scroll to end when appending data
     },
-    wait = true, -- wait for the command completion and only start the next command or dapcmd if successfull
+    wait = true, -- wait for the command completion and only start the next command or dapcmd if successfull; if given a number, the next job will be delayed for wait milliseconds
 }
 ```
 Prelaunch tasks are executed sorted by their key.

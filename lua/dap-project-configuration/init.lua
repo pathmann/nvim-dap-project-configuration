@@ -218,7 +218,8 @@ local function launchAll(selection, lcfg, cbafter)
 
     local key, _ = iter()
     if key ~= nil then
-      if lcfg[key].wait == true then
+      local wait = lcfg[key].wait
+      if (type(wait) == "boolean" and wait == true) or (type(wait) == "number") then
         launcher.launch(selection, key, lcfg[key], callnext, Config.options.ignore_win_to_close)
       else
         launcher.launch(selection, key, lcfg[key], nil, Config.options.ignore_win_to_close)

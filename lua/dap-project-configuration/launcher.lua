@@ -256,9 +256,18 @@ M.launch = function(selection, cmdname, cmdtable, callafter, ignorewinfunc)
       end
 
       if callafter ~= nil then
-        vim.schedule(function()
-          callafter(code, signal)
-        end)
+        local wait = cmdtable.wait
+        if type(wait) == "number" then
+          vim.loop.new_timer():start(wait, 0, function()
+            vim.schedule(function()
+              callafter(code, signal)
+            end)
+          end)
+        else
+          vim.schedule(function()
+            callafter(code, signal)
+          end)
+        end
       end
     end,
   })
