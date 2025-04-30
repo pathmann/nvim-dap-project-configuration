@@ -1,4 +1,5 @@
 local Config = require("dap-project-configuration.config")
+local Utils = require("dap-project-configuration.utils")
 local launcher = require("dap-project-configuration.launcher")
 local popup = require("plenary.popup")
 
@@ -404,6 +405,87 @@ local function completeSelections(argprefix)
   return filterPrefix(allsels, argprefix)
 end
 
+local function empty_project()
+  return [[
+  return {
+    build = {
+      dap = nil,
+      run = {
+        launch = {
+          cmd = "",
+          args = {},
+          cwd = vim.fn.getcwd(),
+          env = vim.fn.environ(),
+        },
+        output = {
+          target = "buffer",
+          reuse = true,
+          clear = true,
+          close_on_success = true,
+          stop_on_close = true,
+          autoscroll = true,
+        }
+      },
+    },
+}, {
+  on_select = function(target)
+
+  end,
+}
+  ]]
+end
+
+local function open_tabbed_buffer(filename, content)
+  vim.cmd("tabnew")
+
+  local buf = vim.api.nvim_create_buf(true, false)
+
+  local lines = vim.split(content, "\n", { plain = true })
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+  vim.api.nvim_buf_set_name(buf, filename)
+
+  vim.api.nvim_set_current_buf(buf)
+
+  vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
+  vim.api.nvim_set_option_value("readonly", false, { buf = buf })
+  vim.api.nvim_set_option_value("filetype", "lua", { buf = buf })
+
+  vim.bo.modified = true
+end
+
+M.create_configuration = function(args)
+  local confname = vim.fn.getcwd() .. "/" .. Config.options.filename
+
+  if vim.fn.filereadable(confname) == 1 then
+    print("project config already exists")
+    return
+  end
+
+  local lang = args.fargs[1] or nil
+
+  if lang == nil then
+    local detfunc = Config.options.detect_language or Utils.detect_language
+    lang = detfunc(vim.fn.getcwd(), vim.api.nvim_get_current_buf())
+  end
+
+  local tpl = empty_project()
+
+  if lang == nil then
+    print("language was not detected, creating empty project file")
+  else
+    local tplfunc = Config.options.config_templates[lang]
+
+    if tplfunc == nil then
+      print("no template found for lang " .. lang .. ", creating empty project file")
+    else
+      tpl = tplfunc(vim.fn.getcwd())
+    end
+  end
+
+  open_tabbed_buffer(confname, tpl)
+end
+
 M.setup = function(opts)
   Config.setup(opts)
 
@@ -431,6 +513,7 @@ M.setup = function(opts)
   vim.api.nvim_create_user_command("ProjectDapEnableDap", M.enable_dap, {})
   vim.api.nvim_create_user_command("ProjectDapDisableDap", M.disable_dap, {})
   vim.api.nvim_create_user_command("ProjectDapSelectDap", M.select_dap, {})
+  vim.api.nvim_create_user_command("ProjectDapCreate", M.create_configuration, { nargs="?" })
 
 
   vim.api.nvim_create_autocmd({"BufWipeout"}, {

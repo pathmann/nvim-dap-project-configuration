@@ -35,6 +35,8 @@ local defaults = {
   filename = ".nvim-dap-project-configuration.lua", -- project configuration file to look for in current cwd
   dapcmd = "DapContinue", -- command to run with :ProjectDapRun after the prelaunch tasks are successfully executed (a string is interpreted as vim cmd, a function will be executed)
   ignore_win_to_close = nil,
+  detect_language = Utils.detect_language, -- fun(cwd: string, curbuf: number): string to detect the current project type (language/filetype) to create new project configurations with :ProjectDapCreate
+  config_templates = {}, -- table<lang: string, fun(cwd: string): string> returning new project configurations with :ProjectDapCreate
 }
 ```
 
@@ -324,6 +326,7 @@ These user commands are available:
 - `ProjectDapEnableDap`: Enables debugging (disables running)
 - `ProjectDapDisableDap`: Disables debugging (enables running)
 - `ProjectDapSelectDap`: Open the dap or run popup
+- `ProjectDapCreate`: Create a project configuration file (if not already exists) in the cwd
 
 ## Intention
 I was previously working with Qt Creator where you can select the subdir project to run/debug (with configured arguments, etc.). So this plugin was born to adapt this functionality without the need to leave Neovim and/or use a terminal inside Neovim and write bash scripts for all tasks.
